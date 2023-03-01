@@ -35,7 +35,9 @@ int main()
     Singleton<C>::GetInstance()->Fun();
 
     //释放单例
-
+    Singleton<A>::DestroyInstance();
+    Singleton<B>::DestroyInstance();
+    Singleton<C>::DestroyInstance();
 
     return 0;
 }
