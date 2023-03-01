@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "DesignMode"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"iostream": "cpp",
+			"type_traits": "cpp"
+		}
+	}
+}
