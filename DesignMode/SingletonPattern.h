@@ -27,7 +27,7 @@ public:
     static void DestroyInstance()
     {
         delete m_pInstance;
-        m_pInstance == nullptr;
+        m_pInstance = nullptr;
     }
 private:
     Singleton(void);//单例模式构造、析构函数必须为私有
