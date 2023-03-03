@@ -1,74 +1,116 @@
 #include <iostream>
+#include <string>
 #include "SingletonPattern.h" //单例模式
 #include "Events.h"           //事件，观察者模式
 #include "Vistor.h"           //访问者模式
 #include "ExVistor.h"         //改进访问者模式
+#include "CommandPattern.h"   //命令模式
 
 using namespace std;
 
+struct STA
+{
+    int m_a;
+    int operator() () { return m_a; }
+    int operator() (int n) { return m_a + n; }
+    int triple0() { return m_a*3; }
+    int triple(int a) { return m_a*3+a; }
+    int triple1() const { return m_a*3; }
+    const int triple2(int a) const { 
+        cout << "cmd.Wrap(&STA::triple2, &t, 3);" << endl; 
+        return m_a*3+a; 
+        }
+
+    void triple3() { cout << "cmd.Wrap(&STA::triple3, &t);" << endl; } 
+};
+
+int add_one(int n)
+{
+    return n+1;
+}
+
 int main()
 {
+    CommCommand<int> cmd;
+    //接收一个普通函数原型的命令
+    cmd.Wrap(add_one, 3);
+
+    //接收一个Lambda表达式
+    cmd.Wrap([](int n){ return n+1;}, 1);
+
+    //接收函数对象作为命令
+    //cmd.Wrap(bloop, 4);
+
+    STA t = { 10 };
+    int x = 3;
+    //接收函数对象
+    cmd.Wrap(&STA::triple0, &t);
+    cmd.Wrap(&STA::triple, &t, x);
+    cmd.Wrap(&STA::triple, &t, 3);
+    cmd.Wrap(&STA::triple2, &t, 3);
+    //每次Wrap都是将命令执行类内部的命令对象进行替换
+    auto r = cmd.Excecute();//该行将会执行最新Wrap的命令
 
     return 0;
 }
 
-namespace np_ExVisitor{
-struct stA;
-struct stB;
+// namespace np_ExVisitor{
+// struct stA;
+// struct stB;
 
-struct Base
-{
-    // 定义通用的访问者类型，它可以访问sta和stB
-    typedef ExVisitor<stA, stB> myExVisitor;
-    virtual void Accept(myExVisitor &) = 0;
-};
+// struct Base
+// {
+//     // 定义通用的访问者类型，它可以访问sta和stB
+//     typedef ExVisitor<stA, stB> myExVisitor;
+//     virtual void Accept(myExVisitor &) = 0;
+// };
 
-struct stA : Base
-{
-    double val;
-    void Accept(Base::myExVisitor &v)
-    {
-        v.Visitor(*this);
-    }
-};
+// struct stA : Base
+// {
+//     double val;
+//     void Accept(Base::myExVisitor &v)
+//     {
+//         v.Visitor(*this);
+//     }
+// };
 
-struct stB : Base
-{
-    int val;
-    void Accept(Base::myExVisitor &v)
-    {
-        v.Visitor(*this);
-    }
-};
+// struct stB : Base
+// {
+//     int val;
+//     void Accept(Base::myExVisitor &v)
+//     {
+//         v.Visitor(*this);
+//     }
+// };
 
-//通过接口我们就可以实现访问者类PrintVisitor，它可以访问stA、stB的元素
-struct PrintVisitor : Base::myExVisitor
-{
-    void Visitor(const stA &a)
-    {
-        cout << "from stA:" << a.val << endl;
-    }
-    void Visitor(const stB &b)
-    {
-        cout << "form stB:" << b.val << endl;
-    }
-};
+// //通过接口我们就可以实现访问者类PrintVisitor，它可以访问stA、stB的元素
+// struct PrintVisitor : Base::myExVisitor
+// {
+//     void Visitor(const stA &a)
+//     {
+//         cout << "from stA:" << a.val << endl;
+//     }
+//     void Visitor(const stB &b)
+//     {
+//         cout << "form stB:" << b.val << endl;
+//     }
+// };
 
-int main()
-{
-    PrintVisitor vis;
-    stA a;
-    a.val = 8.97;
-    stB b;
-    b.val = 8;
-    Base* base = &a;//以子类初始化父类指针
-    base->Accept(vis);
-    base = &b;
-    base->Accept(vis);
+// int main()
+// {
+//     PrintVisitor vis;
+//     stA a;
+//     a.val = 8.97;
+//     stB b;
+//     b.val = 8;
+//     Base* base = &a;//以子类初始化父类指针
+//     base->Accept(vis);
+//     base = &b;
+//     base->Accept(vis);
 
-    return 0;
-}
-}
+//     return 0;
+// }
+// }
 
 namespace np_Vistor
 {
@@ -127,8 +169,7 @@ namespace np_Events
 
 }
 
-namespace np_SingletonPattern
-{
+namespace np_SingletonPattern{
     struct A
     {
         A(const string &) { cout << "lvaue" << endl; }
