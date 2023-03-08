@@ -9,17 +9,25 @@
 #include <map>
 
 using namespace std;
-const int MaxObjectNum = 10;
+
+//因此现定义一个不可复制的基类方便继承
+class NonCopyable
+{
+protected:
+    NonCopyable() = default;
+    ~NonCopyable() = default;
+    NonCopyable(const NonCopyable&) = delete; // 使用delete关键字可以禁用复制构造
+    //禁用赋值构造函数
+    NonCopyable& operator = (const NonCopyable&) = delete;
+};
 
 template <typename T>
-class ObjectPool
+class ObjectPool : NonCopyable //继承基类禁用复制构造和赋值构造
 {
     template <typename... Args>
     using Constructor = std::function<std::shared_ptr<T>(Args...)>; //using为typedef的另一种替代用法
 
 public:
-    ObjectPool(){}
-    ~ObjectPool(){}
     //默认创建多少个对象
     template <typename... Args>
     void Init(size_t num,Args&&... args)
@@ -45,9 +53,29 @@ public:
     {
         return std::shared_ptr<T>(new T(args...), [constructName, this](T* t)
         {
-
+            if(needClear)
+                delete[] t;
+            else
+                m_object_map.emplace(constructName, std::shared_ptr<T>(t));
         }
         );
+    }
+
+    //从对象池中获取一个对象
+    template <typename... Args>
+    std::shared_ptr<T> Get()
+    {
+        string constructName = typeid(Constructor<Args...>).name();
+
+        auto range = m_object_map.equal_range(constructName);
+        for(auto it = range.frist; it != range.second; ++it)
+        {
+            auto ptr = it->second;
+            m_object_map.erase(it);
+            return ptr;
+        }
+
+        return mullptr;
     }
 
 
